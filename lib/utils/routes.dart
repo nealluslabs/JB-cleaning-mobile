@@ -1,3 +1,5 @@
+import 'package:cleaning_llc/screens/auth/login_page.dart';
+import 'package:cleaning_llc/screens/auth/register_screen.dart';
 import 'package:cleaning_llc/screens/checklist_screen.dart';
 import 'package:cleaning_llc/screens/issues_screen.dart';
 import 'package:cleaning_llc/screens/items_screen.dart';
@@ -10,4 +12,6 @@ var appRoutes = {
   ChecklistScreen.routeName: (context) => const ChecklistScreen(),
   TimeLogScreen.routeName: (context) => const TimeLogScreen(),
   ItemsScreen.routeName: (context) => const ItemsScreen(),
+  LoginPage.routeName: (context) => const LoginPage(),
+  RegisterPage.routeName: (context) => const RegisterPage(),
 };

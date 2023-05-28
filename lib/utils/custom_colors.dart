@@ -6,4 +6,5 @@ class CustomColors {
   static const kMainColor = Color(0xFFD31313);
   static const kLightMainColor = Color(0xFFFFF5F5);
   static const kLightGreyColor = Color(0xFFFAFAFA);
+  static const blackIconColor = Color.fromRGBO(80, 85, 92, 1);
 }

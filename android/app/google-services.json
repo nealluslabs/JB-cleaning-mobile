@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "847315778015",
+    "project_id": "jbcleaning-5ac60",
+    "storage_bucket": "jbcleaning-5ac60.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:847315778015:android:cf012936f360e3ac576c6a",
+        "android_client_info": {
+          "package_name": "com.example.cleaning_llc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "847315778015-1ledf5sb9ieqhbqldr3ifiq5riad55rp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWWKB8OUPvise0lpplGlGNm30ZC9pU32I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "847315778015-1ledf5sb9ieqhbqldr3ifiq5riad55rp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
