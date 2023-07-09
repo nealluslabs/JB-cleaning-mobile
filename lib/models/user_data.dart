@@ -1,3 +1,5 @@
+import 'package:cleaning_llc/models/timelog_model.dart';
+
 class UserDataModel {
   UserDataModel({
     this.id = "",
@@ -17,7 +19,7 @@ class UserDataModel {
   String firstName;
   String lastName;
   String password;
-  List<String> timeLog;
+  List<TimeLog> timeLog;
   // List<TimeLog> timeLog;
 
   // List<UserImageResponseModel> userImages;
@@ -28,11 +30,29 @@ class UserDataModel {
         email: json["email"] ?? "",
         firstName: json["firstName"] ?? "",
         lastName: json["lastName"] ?? "",
-        // timeLog: (json["timeLog"] as List<String>?) ?? [],
-        // timeLog: (json["timeLog"] as List<dynamic>?)
-        //         ?.map((e) => TimeLog.fromJson(e))
-        //         .toList() ??
-        //     [],
+        // timeLog: json["timeLog"] as List?? "",
+        // timeLog: json["timeLog"] ?? [],
+// if (json['identityDocuments'] != null) {
+//       identityDocuments = <IdentityDocuments>[];
+//       json['identityDocuments'].forEach((v) {
+//         identityDocuments!.add(IdentityDocuments.fromJson(v));
+//       });}
+
+        // timeLog :
+        //     json['timeLog'].forEach((v) {
+        //       timeLog!.add(TimeLog.fromJson(v));
+        //     }),
+
+        timeLog: (json["timeLog"] as List<dynamic>?)?.map((e) {
+              // print(e);
+              // TimeLog data = TimeLog(
+              //     clockIn: e['clockIn'].toDate(),
+              //     clockOut: e['clockOut'].toDate());
+              // print(data);
+              // return data;
+              return TimeLog.fromJson(e);
+            }).toList() ??
+            [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -41,6 +61,6 @@ class UserDataModel {
         "email": email,
         "firstName": firstName,
         "lastName": lastName,
-        "timeLog": timeLog,
+        // "timeLog": timeLog.map((log) => log.toJson()).toList(),
       };
 }

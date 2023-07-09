@@ -5,6 +5,7 @@ import 'package:cleaning_llc/models/user_data.dart';
 import 'package:cleaning_llc/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../models/app_user_model.dart';
 import '../../models/property_model.dart';
@@ -168,6 +169,47 @@ class AuthViewModel extends BaseChangeNotifier {
     }
   }
 
+  Future<UserDataModel?> getUsersCredentialsLocal() async {
+    var userData = localCache.getUserData();
+    return userData;
+  }
+
+  Future<List<String>> getAllUsersTImelog(
+      {BuildContext? context, required WidgetRef ref}) async {
+    try {
+      var userTimeLog = await userRepository.getUsersCredentials();
+
+      if (userTimeLog != null) {
+        List<String> result = userTimeLog.timeLog.map((item) {
+          var clockedOut = item.clockOut;
+          print(clockedOut);
+          return DateFormat('dd | MM | yy').format(clockedOut).toString();
+        }).toList();
+        return result;
+        // ref.read(propertNameProvider.notifier).state =
+        //     properties[0].propertyName;
+        //     snapshot.data![0].propertyName;
+      } else {
+        isLoading = false;
+        return [];
+      }
+    } catch (e, stacktrace) {
+      isLoading = false;
+      print(e.toString());
+      // ScaffoldMessenger.of(context!)
+      //   ..removeCurrentSnackBar()
+      //   ..showSnackBar(SnackBar(
+      //     content: Text(e.toString()),
+      //     backgroundColor: Colors.red,
+      //   ));
+      debugPrint(e.toString());
+
+      log(e.toString());
+      log(stacktrace.toString());
+    }
+    return [];
+  }
+
   Future<List<Property>?> getAllCompanyProperty(
       {BuildContext? context, required WidgetRef ref}) async {
     try {
@@ -202,7 +244,192 @@ class AuthViewModel extends BaseChangeNotifier {
     }
     return null;
   }
+
+  Future<List<String>?> getAllPropertyRooms(
+      {BuildContext? context,
+      required WidgetRef ref,
+      required String propertyId}) async {
+    try {
+      isLoading = true;
+      final rooms = await userRepository.getAllPropertyRooms(propertyId);
+
+      if (rooms != null) {
+        List<String> data = rooms.map((item) => item.toString()).toList();
+        isLoading = false;
+        // ref.read(propertNameProvider.notifier).state =
+        //     properties[0].propertyName;
+        //     snapshot.data![0].propertyName;
+        // return rooms;
+        return data;
+      } else {
+        isLoading = false;
+        return [];
+      }
+    } catch (e, stacktrace) {
+      isLoading = false;
+      print(e.toString());
+      // ScaffoldMessenger.of(context!)
+      //   ..removeCurrentSnackBar()
+      //   ..showSnackBar(SnackBar(
+      //     content: Text(e.toString()),
+      //     backgroundColor: Colors.red,
+      //   ));
+      debugPrint(e.toString());
+
+      log(e.toString());
+      log(stacktrace.toString());
+    }
+    return null;
+  }
+
+  Future saveUserIssues({
+    BuildContext? context,
+    required WidgetRef ref,
+    required String propertyId,
+    required String roomId,
+    required List<String> description,
+    // required String workerId,
+    required DateTime issueCreated,
+    // required bool functionalTv,
+    // required bool functionalFan,
+    // required List<String> listedIssues,
+  }) async {
+    try {
+      isLoading = true;
+      UserDataModel data = localCache.getUserData();
+      final result = await userRepository.saveUserIssues(
+        propertyId: propertyId,
+        roomId: roomId,
+        companyId: data.companyId,
+        description: description,
+        issueCreated: issueCreated,
+        // workerId: workerId,
+        // functionalTv: functionalTv,
+        // functionalFan: functionalFan,
+        // listedIssues: listedIssues,
+      );
+
+      if (result) {
+        isLoading = false;
+        // ref.read(propertNameProvider.notifier).state =
+        //     properties[0].propertyName;
+        //     snapshot.data![0].propertyName;
+        ref.read(propertyNameProvider.notifier).state = null;
+        ref.read(roomNameProvider.notifier).state = null;
+
+        Navigator.of(context!).pushNamed(ProfileScreen.routeName);
+      } else {
+        isLoading = false;
+      }
+    } catch (e, stacktrace) {
+      isLoading = false;
+      print(e.toString());
+      ScaffoldMessenger.of(context!)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ));
+      debugPrint(e.toString());
+
+      log(e.toString());
+      log(stacktrace.toString());
+    }
+  }
+
+  // Future saveUserTimeLog({
+  //   BuildContext? context,
+  //   required WidgetRef ref,
+  //   required List<String> timeLog,
+  // }) async {
+  //   try {
+  //     isLoading = true;
+  //     final lastClockedIn =
+  //         localCache.getFromLocalCache(ConstantString.lastClockIn);
+  //     if (lastClockedIn != null) {
+  //       return DateTime.parse(lastClockedIn.toString());
+  //     }
+  //     final result = await userRepository.saveUserTimeLog(timeLog: timeLog);
+  //     isLoading = false;
+  //   } catch (e, stacktrace) {
+  //     isLoading = false;
+  //     print(e.toString());
+  //     ScaffoldMessenger.of(context!)
+  //       ..removeCurrentSnackBar()
+  //       ..showSnackBar(SnackBar(
+  //         content: Text(e.toString()),
+  //         backgroundColor: Colors.red,
+  //       ));
+  //     debugPrint(e.toString());
+
+  //     log(e.toString());
+  //     log(stacktrace.toString());
+  //   }
+  // }
+
+  Future saveUserTimeLogClockOut({
+    BuildContext? context,
+    required WidgetRef ref,
+    required DateTime clockOut,
+  }) async {
+    try {
+      isLoading = true;
+      final lastClockedIn =
+          localCache.getFromLocalCache(ConstantString.lastClockIn);
+      if (lastClockedIn != null) {
+        final clockedIn = DateTime.parse(lastClockedIn.toString());
+
+        final result = await userRepository.saveUserTimeLog(
+            clockIn: clockedIn, clockOut: clockOut);
+      }
+
+      isLoading = false;
+    } catch (e, stacktrace) {
+      isLoading = false;
+      print(e.toString());
+      ScaffoldMessenger.of(context!)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ));
+      debugPrint(e.toString());
+
+      log(e.toString());
+      log(stacktrace.toString());
+    }
+  }
+
+  Future saveUserTimeLogClockIn({
+    BuildContext? context,
+    required WidgetRef ref,
+    required DateTime timeLog,
+  }) async {
+    try {
+      isLoading = true;
+      final formattedDateTime = timeLog.toIso8601String();
+      await localCache.saveToLocalCache(
+          key: ConstantString.lastClockIn, value: formattedDateTime);
+      isLoading = false;
+    } catch (e, stacktrace) {
+      isLoading = false;
+      print(e.toString());
+      ScaffoldMessenger.of(context!)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+        ));
+      debugPrint(e.toString());
+
+      log(e.toString());
+      log(stacktrace.toString());
+    }
+  }
 }
 
 final propertyNameProvider = StateProvider.autoDispose<String?>((ref) => null);
+final roomNameProvider = StateProvider.autoDispose<String?>((ref) => null);
 final propertyProvider = StateProvider.autoDispose<Property?>((ref) => null);
+final tvCheck = StateProvider.autoDispose<bool>((ref) => false);
+final fanCheck = StateProvider.autoDispose<bool>((ref) => false);

@@ -2,7 +2,7 @@ class Room {
   final String? id;
   final String propertyId;
   final String name;
-  List<String> items;
+  List<dynamic> items;
 
   Room({
     this.id,

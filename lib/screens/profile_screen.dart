@@ -1,4 +1,3 @@
-import 'package:cleaning_llc/screens/checklist_screen.dart';
 import 'package:cleaning_llc/screens/issues_screen.dart';
 import 'package:cleaning_llc/screens/time_log_screen.dart';
 import 'package:cleaning_llc/utils/custom_colors.dart';
@@ -9,6 +8,7 @@ import '../widgets/custom_appbar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/home_container.dart';
 import '../widgets/navigation_drawer.dart';
+import 'checklist_screen_backup.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -21,108 +21,129 @@ class ProfileScreen extends StatelessWidget {
       drawer: const CustomNavigationDrawer(
         pageIndex: 1,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            verticalSpacer(20),
-            const Text.rich(
-              TextSpan(
-                text: 'Welcome ',
-                style: TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w400,
-                  color: CustomColors.blackColor,
-                ),
-                children: [
-                  TextSpan(
-                    text: 'Bonita',
-                    style: TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.w700,
-                      color: CustomColors.blackColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            verticalSpacer(30),
-            SizedBox(
-              height: 200,
-              child: Row(
-                children: [
-                  const HomeContainer(
-                    isActive: true,
-                    title: "Profile",
-                    iconUrl: 'assets/icons/profile_icon.svg',
-                  ),
-                  horizontalSpacer(20),
-                  HomeContainer(
-                    title: "Issues",
-                    iconUrl: 'assets/icons/issues_icon.svg',
-                    onTap: () {
-                      Navigator.pushReplacementNamed(
-                          context, IssuesScreen.routeName);
-                    },
-                  )
-                ],
-              ),
-            ),
-            verticalSpacer(15),
-            SizedBox(
-              height: 200,
-              child: Row(
-                children: [
-                  HomeContainer(
-                    title: "Checklists",
-                    iconUrl: 'assets/icons/checklist_icon.svg',
-                    onTap: () {
-                      Navigator.pushReplacementNamed(
-                          context, ChecklistScreen.routeName);
-                    },
-                  ),
-                  horizontalSpacer(20),
-                  HomeContainer(
-                    title: "Time Log",
-                    iconUrl: 'assets/icons/clock_icon.svg',
-                    onTap: () {
-                      Navigator.pushReplacementNamed(
-                          context, TimeLogScreen.routeName);
-                    },
-                  )
-                ],
-              ),
-            ),
-            verticalSpacer(15),
-            const Text(
-              'Schedule',
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.w700,
-                color: CustomColors.blackColor,
-              ),
-            ),
-            verticalSpacer(10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  '09 | 09 | 23',
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              verticalSpacer(20),
+              const Text.rich(
+                TextSpan(
+                  text: 'Welcome ',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 23,
                     fontWeight: FontWeight.w400,
                     color: CustomColors.blackColor,
                   ),
+                  children: [
+                    TextSpan(
+                      text: 'Bonita',
+                      style: TextStyle(
+                        fontSize: 23,
+                        fontWeight: FontWeight.w700,
+                        color: CustomColors.blackColor,
+                      ),
+                    ),
+                  ],
                 ),
-                CustomButton(title: "View")
-              ],
-            ),
-            verticalSpacer(5),
-            const Divider(
-              color: CustomColors.blackColor,
-            )
-          ],
+              ),
+              verticalSpacer(30),
+              SizedBox(
+                height: 200,
+                child: Row(
+                  children: [
+                    const HomeContainer(
+                      isActive: true,
+                      title: "Profile",
+                      iconUrl: 'assets/icons/profile_icon.svg',
+                    ),
+                    horizontalSpacer(20),
+                    HomeContainer(
+                      title: "Issues",
+                      iconUrl: 'assets/icons/issues_icon.svg',
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                            context, IssuesScreen.routeName);
+                      },
+                    )
+                  ],
+                ),
+              ),
+              verticalSpacer(15),
+              SizedBox(
+                height: 200,
+                child: Row(
+                  children: [
+                    HomeContainer(
+                      title: "Checklists",
+                      iconUrl: 'assets/icons/checklist_icon.svg',
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                            context, ChecklistScreen.routeName);
+                      },
+                    ),
+                    horizontalSpacer(20),
+                    HomeContainer(
+                      title: "Time Log",
+                      iconUrl: 'assets/icons/clock_icon.svg',
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                            context, TimeLogScreen.routeName);
+                      },
+                    )
+                  ],
+                ),
+              ),
+              verticalSpacer(15),
+              const Text(
+                'Schedule',
+                style: TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w700,
+                  color: CustomColors.blackColor,
+                ),
+              ),
+              verticalSpacer(10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Text(
+                    'Casa Pella  09 | 09 | 23',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w400,
+                      color: CustomColors.blackColor,
+                    ),
+                  ),
+                  CustomButton(title: "View")
+                ],
+              ),
+              verticalSpacer(10),
+              const Divider(
+                color: CustomColors.blackColor,
+              ),
+              verticalSpacer(10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Text(
+                    '2917 Manor  01 | 01 | 23',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w400,
+                      color: CustomColors.blackColor,
+                    ),
+                  ),
+                  CustomButton(title: "View")
+                ],
+              ),
+              verticalSpacer(10),
+              const Divider(
+                color: CustomColors.blackColor,
+              ),
+            ],
+          ),
         ),
       ),
     );

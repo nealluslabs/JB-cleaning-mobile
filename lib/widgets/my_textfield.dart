@@ -81,3 +81,36 @@ Widget customTextField(String name,
     ),
   );
 }
+
+Widget customMultiTextField(String name,
+    {required String hintText,
+    IconData? prefixIcon,
+    IconData? suffixIcon,
+    Widget? prefix,
+    String? initialValue,
+    bool isHint = false,
+    bool obscureText = false,
+    String? helperText,
+    String? Function(String?)? validator,
+    void Function()? onSuffixTap,
+    void Function(String?)? onChanged}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 0.0),
+    child: FormBuilderTextField(
+      initialValue: initialValue,
+      // cursorColor: CustomColors.,
+      maxLines: 4,
+      name: name,
+      obscureText: obscureText,
+      validator: validator,
+      onChanged: onChanged,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        ),
+        contentPadding: EdgeInsets.all(10.0),
+      ),
+    ),
+  );
+}

@@ -1,6 +1,5 @@
 // ignore_for_file: prefer_typing_uninitialized_variables, unused_local_variable
 
-import 'package:cleaning_llc/models/rooms_model.dart';
 import 'package:cleaning_llc/models/user_data.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +14,7 @@ import '../view_model/local_cache/local_cache.dart';
 abstract class UserRepository {
   Future<User?> createUserWithEmail(String email, String password);
   Future<User?> loginWithEmail(String email, String password);
+  Future<User?> loginWithEmail1(String email, String password);
   Future isUserSignedIn();
   Future logOut();
   Future resetPassword(String email);
@@ -22,9 +22,30 @@ abstract class UserRepository {
   Future<String?> saveUserCredentials(String email, String firstName,
       String lastName, int companyId, String password, DateTime accountCreated);
   Future<UserDataModel?> getUsersCredentials();
+
   Future<int?> getCompanyFromId(int companyId);
   Future<List<Property>?> getAllCompanyProperty(String companyId);
-  Future<List<Room>?> getAllPropertyRooms(String propertyId);
+  Future<List<dynamic>?> getAllPropertyRooms(String propertyId);
+  // Future<void> saveUserTimeLog({
+  //   required List<String> timeLog,
+  // });
+  Future<void> saveUserTimeLog({
+    required DateTime clockIn,
+    required DateTime clockOut,
+  });
+  Future<void> saveUserTimeLogClockIn({
+    required DateTime timeLog,
+  });
+  Future<bool> saveUserIssues({
+    required String propertyId,
+    required String roomId,
+    required String companyId,
+    // required String description,
+    required DateTime issueCreated,
+    // required bool functionalTv,
+    // required bool functionalFan,
+    required List<String> description,
+  });
 }
 
 class UserRepositoryImpl implements UserRepository {
@@ -43,6 +64,8 @@ class UserRepositoryImpl implements UserRepository {
       FirebaseFirestore.instance.collection('properties');
   CollectionReference roomsFirebaseFirestore =
       FirebaseFirestore.instance.collection('rooms');
+  CollectionReference issuesFirebaseFirestore =
+      FirebaseFirestore.instance.collection('issues');
 
   @override
   Future<User?> createUserWithEmail(String email, String password) async {
@@ -132,6 +155,23 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
+  Future<User?> loginWithEmail1(String email, String password) async {
+    try {
+      final appUser =
+          await firebaseFirestore.where("email", isEqualTo: email).get();
+
+      if (appUser.docs.isNotEmpty) {
+        var pass = appUser.docs[0].get("password");
+        if (pass == password) {
+          final user = await createUserWithEmail(email, password);
+          return user;
+        }
+      }
+    } catch (error) {}
+    return null;
+  }
+
+  @override
   Future resetPassword(String email) async {
     try {
       await firebaseAuth.sendPasswordResetEmail(email: email);
@@ -159,6 +199,8 @@ class UserRepositoryImpl implements UserRepository {
           'timelog': [],
           'companyId': companyId,
           'password': password,
+          'timeLog': [],
+          'issues': [],
         },
         SetOptions(
           merge: true,
@@ -175,6 +217,7 @@ class UserRepositoryImpl implements UserRepository {
       final snapshot = await appUser.get();
 
       if (snapshot.exists) {
+        var some = snapshot.data();
         return UserDataModel.fromJson(snapshot.data());
       }
     } catch (error) {}
@@ -233,30 +276,45 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<List<Room>?> getAllPropertyRooms(String propertyId) async {
+  Future<List<dynamic>?> getAllPropertyRooms(String propertyId) async {
     try {
-      // final sharedPreferences = await SharedPreferences.getInstance();
-      List<Property> allRooms = [];
-      final data =
-          roomsFirebaseFirestore.where("propertyId", isEqualTo: propertyId);
-      final rooms = await data.get();
-      if (rooms.docs.isNotEmpty) {
-        List<Room> allProperties =
-            rooms.docs.map((doc) => Room.fromJson(doc)).toList();
-        // for (var movie in movies.docs) {
-        //   var newMovie = Movie.fromJson(movie);
-
-        //   if (SharedPreferenceHelper()
-        //           .getFromLocalCache(sharedPreferences, movie.id) ==
-        //       null) {
-        //     SharedPreferenceHelper().saveToLocalCache(key: movie.id, value: 0);
-        //   }
-        //   allMovies.add(newMovie);
-        // }
-        // print(allMovies);
-        print(allProperties);
-        return allProperties;
+      try {
+        final property =
+            propertiesFirebaseFirestore.where("id", isEqualTo: propertyId);
+        final snapshot = await property.get();
+        if (snapshot.docs.isEmpty) {
+          return null;
+        }
+        var data = snapshot.docs[0].data();
+        var result = Property.fromJson(data);
+        return result.rooms;
+      } catch (error) {
+        print(1);
+        print(error.toString());
       }
+      return null;
+      // // final sharedPreferences = await SharedPreferences.getInstance();
+      // List<Property> allRooms = [];
+      // final data =
+      //     roomsFirebaseFirestore.where("propertyId", isEqualTo: propertyId);
+      // final rooms = await data.get();
+      // if (rooms.docs.isNotEmpty) {
+      //   List<Room> allProperties =
+      //       rooms.docs.map((doc) => Room.fromJson(doc)).toList();
+      //   // for (var movie in movies.docs) {
+      //   //   var newMovie = Movie.fromJson(movie);
+
+      //   //   if (SharedPreferenceHelper()
+      //   //           .getFromLocalCache(sharedPreferences, movie.id) ==
+      //   //       null) {
+      //   //     SharedPreferenceHelper().saveToLocalCache(key: movie.id, value: 0);
+      //   //   }
+      //   //   allMovies.add(newMovie);
+      //   // }
+      //   // print(allMovies);
+      //   print(allProperties);
+      //   return allProperties;
+      // }
     } catch (error) {
       print(error);
       // handle the error
@@ -264,21 +322,74 @@ class UserRepositoryImpl implements UserRepository {
     return null;
   }
 
-  Future<String?> saveUserIssues(String propertyId, String roomId,
-      String description, DateTime issueCreated) async {
+  @override
+  Future<bool> saveUserIssues({
+    required String propertyId,
+    required String roomId,
+    required String companyId,
+    // required String description,
+    required DateTime issueCreated,
+    // required bool functionalTv,
+    // required bool functionalFan,
+    required List<String> description,
+  }) async {
     String? uid = firebaseAuth.currentUser?.uid.toString();
-    final docUser = firebaseFirestore.doc();
+    final docUser = issuesFirebaseFirestore.doc();
     await docUser.set(
         {
           'id': docUser.id,
           'propertyId': propertyId,
-          'roomId': roomId,
+          'room': roomId,
           'description': description,
           'workerId': uid.toString(),
+          'companyId': companyId,
+          'createdAt': issueCreated,
+          // 'workerId': workerId,
+          // 'functionalTv': functionalTv,
+          // 'functionalFan': functionalFan,
+          // 'listedIssues': listedIssues,
         },
         SetOptions(
           merge: true,
         ));
-    return uid;
+
+    await propertiesFirebaseFirestore.doc(propertyId).update(
+      {
+        'issues': FieldValue.arrayUnion([docUser.id]),
+      },
+    );
+    await firebaseFirestore.doc(uid.toString()).update(
+      {
+        'issues': FieldValue.arrayUnion([docUser.id]),
+      },
+    );
+    return true;
+  }
+
+  @override
+  Future<void> saveUserTimeLog({
+    required DateTime clockIn,
+    required DateTime clockOut,
+  }) async {
+    String? uid = firebaseAuth.currentUser?.uid.toString();
+    var timelogMap = {
+      'clockIn': clockIn,
+      'clockOut': clockOut,
+    };
+    await firebaseFirestore.doc(uid.toString()).update(
+      {
+        'timeLog': FieldValue.arrayUnion([timelogMap]),
+      },
+    );
+  }
+
+  @override
+  Future<void> saveUserTimeLogClockIn({required DateTime timeLog}) async {
+    String? uid = firebaseAuth.currentUser?.uid.toString();
+    await firebaseFirestore.doc(uid.toString()).update(
+      {
+        'timeLog': FieldValue.arrayUnion([timeLog]),
+      },
+    );
   }
 }

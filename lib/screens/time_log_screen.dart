@@ -1,28 +1,34 @@
+import 'dart:async';
+
 import 'package:cleaning_llc/utils/custom_colors.dart';
 import 'package:cleaning_llc/utils/spacers.dart';
 import 'package:flutter/material.dart';
-
-import '../widgets/add_button.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/custom_appbar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/navigation_drawer.dart';
+import 'auth/auth_view_model.dart';
 
-class TimeLogScreen extends StatefulWidget {
+class TimeLogScreen extends StatefulHookConsumerWidget {
   const TimeLogScreen({super.key});
   static const routeName = '/time_log_screen';
 
   @override
-  State<TimeLogScreen> createState() => _TimeLogScreenState();
+  ConsumerState<TimeLogScreen> createState() => _TimeLogScreenState();
 }
 
-class _TimeLogScreenState extends State<TimeLogScreen>
+class _TimeLogScreenState extends ConsumerState<TimeLogScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> _activeList = [
-    '09 | 09 | 23',
-    '09 | 10 | 23',
-    '09 | 13 | 23',
-  ];
+
+  Timer? _timer;
+  int _seconds = 0;
+  late SharedPreferences _prefs;
+  bool _timerRunning = false;
+  List<String> allTimeLogs = [];
+
   final List<String> _inactiveList = [
     '09 | 10 | 23',
     '09 | 13 | 23',
@@ -32,12 +38,93 @@ class _TimeLogScreenState extends State<TimeLogScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-        length: 2, vsync: this); // Create TabController with 2 tabs
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final timeLogVM = ref.watch(authProvider);
+      var timeLog = await timeLogVM.getAllUsersTImelog(ref: ref);
+      allTimeLogs = timeLog;
+      setState(() {});
+    });
+    _loadSavedTimer();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  void _loadSavedTimer() async {
+    _prefs = await SharedPreferences.getInstance();
+    int? startTime = _prefs.getInt('start_time');
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    int elapsedSeconds =
+        startTime == null ? 0 : ((currentTime - startTime) / 1000).floor();
+
+    setState(() {
+      _seconds = _prefs.getInt('timer') ?? 0;
+    });
+
+    if (elapsedSeconds > 0) {
+      _seconds += elapsedSeconds;
+      _startTimer();
+    }
+  }
+
+  void _startTimer() async {
+    if (_timerRunning) return;
+
+    _timerRunning = true;
+    _prefs.setInt('start_time', DateTime.now().millisecondsSinceEpoch);
+    var clockedIn = DateTime.now();
+    final timeLogVM = ref.watch(authProvider);
+    await timeLogVM.saveUserTimeLogClockIn(
+        ref: ref, context: context, timeLog: clockedIn);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _seconds++;
+        _prefs.setInt('timer', _seconds);
+      });
+    });
+  }
+
+  void _stopTimer() async {
+    if (!_timerRunning) return;
+
+    _timerRunning = false;
+    _seconds = 0;
+    _timer?.cancel();
+    _prefs.setInt('timer', _seconds);
+    _prefs.remove('start_time');
+
+    allTimeLogs.add(DateFormat('dd | MM | yy').format(DateTime.now()));
+    var clockedOut = DateTime.now();
+    final timeLogVM = ref.watch(authProvider);
+
+    // await timeLogVM.saveUserTimeLog(
+    //     ref: ref, context: context, timeLog: allTimeLogs);
+
+    await timeLogVM.saveUserTimeLogClockOut(
+        ref: ref, context: context, clockOut: clockedOut);
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _formatTime(int seconds) {
+    int hours = seconds ~/ 3600;
+    int minutes = (seconds % 3600) ~/ 60;
+    int remainingSeconds = seconds % 60;
+
+    String hoursStr = hours.toString().padLeft(2, '0');
+    String minutesStr = minutes.toString().padLeft(2, '0');
+    String secondsStr = remainingSeconds.toString().padLeft(2, '0');
+
+    return '$hoursStr:$minutesStr:$secondsStr';
   }
 
   @override
   Widget build(BuildContext context) {
+    String timerText = _formatTime(_seconds);
+
     return Scaffold(
       appBar: customAppBar(),
       drawer: const CustomNavigationDrawer(
@@ -58,8 +145,7 @@ class _TimeLogScreenState extends State<TimeLogScreen>
                         color: Colors.grey.withOpacity(0.5),
                         spreadRadius: 2,
                         blurRadius: 5,
-                        offset:
-                            const Offset(0, 3), // changes position of shadow
+                        offset: const Offset(0, 3),
                       ),
                     ],
                     borderRadius: BorderRadius.circular(20)),
@@ -77,32 +163,34 @@ class _TimeLogScreenState extends State<TimeLogScreen>
                         ),
                       ),
                       verticalSpacer(15),
-                      const TextField(
-                        maxLines: 1,
-                        decoration: InputDecoration(
-                          hintText: "Enter time",
-                          border: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.grey, width: 1.0),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(10.0)),
-                          ),
-                          contentPadding: EdgeInsets.all(10.0),
+                      Center(
+                        child: Text(
+                          timerText,
+                          style: const TextStyle(
+                              fontSize: 48, fontWeight: FontWeight.w300),
                         ),
                       ),
                       verticalSpacer(15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          const AddButton(),
-                          horizontalSpacer(10),
-                          const CustomButton(
-                            title: 'Send',
-                          )
-                        ],
-                      ),
                     ],
                   ),
+                ),
+              ),
+              verticalSpacer(30),
+              GestureDetector(
+                onTap: _startTimer,
+                child: CustomButton(
+                  title: 'Clock In',
+                  height: 45,
+                  isOutlined: _timerRunning,
+                ),
+              ),
+              verticalSpacer(10),
+              GestureDetector(
+                onTap: _stopTimer,
+                child: CustomButton(
+                  title: 'Clock Out',
+                  height: 45,
+                  isOutlined: !_timerRunning,
                 ),
               ),
               verticalSpacer(30),
@@ -117,12 +205,11 @@ class _TimeLogScreenState extends State<TimeLogScreen>
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
-
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   color: CustomColors.kMainColor,
                 ),
-                controller: _tabController, // Assign TabController to TabBar
+                controller: _tabController,
                 tabs: const [
                   Tab(
                     text: 'Time Stamp',
@@ -136,11 +223,10 @@ class _TimeLogScreenState extends State<TimeLogScreen>
               SizedBox(
                 height: 300,
                 child: TabBarView(
-                  controller:
-                      _tabController, // Assign TabController to TabBarView
+                  controller: _tabController,
                   children: [
                     ActiveList(
-                      activeList: _activeList,
+                      activeList: allTimeLogs,
                     ),
                     InactiveList(
                       inActiveList: _inactiveList,

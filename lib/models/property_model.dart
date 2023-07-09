@@ -2,18 +2,20 @@ class Property {
   final String? id;
   final String companyId;
   final String propertyAddress;
+  final String propertyImg;
   final String? propertyName;
   List<dynamic> rooms;
-  List<dynamic> issues;
-  List<dynamic> checklist;
+  // List<dynamic> issues;
+  // List<dynamic> checklist;
 
   Property(
       {this.id,
       required this.companyId,
       required this.propertyAddress,
       required this.rooms,
-      required this.issues,
-      required this.checklist,
+      required this.propertyImg,
+      // required this.issues,
+      // required this.checklist,
       this.propertyName});
 
   static Property fromJson(json) => Property(
@@ -21,9 +23,10 @@ class Property {
         propertyAddress: json['propertyAddress'],
         companyId: json['companyId'],
         propertyName: json['propertyName'],
-        rooms: json['rooms'] ?? [],
-        issues: json['issues'] ?? [],
-        checklist: json['checklist'] ?? [],
+        propertyImg: json['propertyImg'],
+        rooms: json['room'] ?? [],
+        // issues: json['issues'] ?? [],
+        // checklist: json['checklist'] ?? [],
       );
 
   Map<String, dynamic> toJson() => {
